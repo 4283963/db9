@@ -278,32 +278,42 @@ function updateCabinetColors(data) {
 }
 
 function onMouseClick(event) {
+  if (!raycaster || !camera || !cabinets || cabinets.length === 0) return;
+
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
   raycaster.setFromCamera(mouse, camera);
 
-  const meshes = cabinets.map(c => c.body);
-  const intersects = raycaster.intersectObjects(meshes, true);
+  const cabinetGroups = cabinets.map(c => c.group);
+  const intersects = raycaster.intersectObjects(cabinetGroups, true);
 
-  if (intersects.length > 0) {
-    let cabinet = null;
-    for (const int of intersects) {
-      let obj = int.object;
-      while (obj && !obj.userData.id) {
-        obj = obj.parent;
-      }
-      if (obj && obj.userData.id) {
+  if (!intersects || intersects.length === 0) {
+    hideTooltip();
+    selectedCabinet = null;
+    return;
+  }
+
+  let cabinet = null;
+  for (let i = 0; i < intersects.length; i++) {
+    const int = intersects[i];
+    if (!int || !int.object) continue;
+
+    let obj = int.object;
+    while (obj) {
+      if (obj.userData && obj.userData.id) {
         cabinet = cabinets.find(c => c.group === obj);
-        break;
+        if (cabinet) break;
       }
+      obj = obj.parent;
     }
+    if (cabinet) break;
+  }
 
-    if (cabinet) {
-      selectedCabinet = cabinet;
-      showTooltip(cabinet, event);
-      fetchCabinetDetail(cabinet.id);
-    }
+  if (cabinet) {
+    selectedCabinet = cabinet;
+    showTooltip(cabinet, event);
+    fetchCabinetDetail(cabinet.id);
   } else {
     hideTooltip();
     selectedCabinet = null;
