@@ -94,6 +94,16 @@
       color: #f59e0b;
     }
 
+    .status-danger {
+      color: #ff3333;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
     .tooltip {
       position: absolute;
       background: rgba(20, 30, 60, 0.95);
@@ -160,6 +170,12 @@
     .tooltip .status-badge.warning {
       background: rgba(245, 158, 11, 0.2);
       color: #f59e0b;
+    }
+
+    .tooltip .status-badge.danger {
+      background: rgba(255, 51, 51, 0.25);
+      color: #ff4444;
+      animation: pulse 1s infinite;
     }
 
     .controls {

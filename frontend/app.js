@@ -223,9 +223,11 @@ function createCabinet(x, z, id) {
   cabinets.push({
     group: cabinetGroup,
     body: body,
+    door: door,
     ledStrip: ledStrip,
     id: id,
-    originalColor: doorMaterial.color.clone()
+    originalBodyColor: bodyMaterial.color.clone(),
+    originalDoorColor: doorMaterial.color.clone()
   });
 
   return cabinetGroup;
@@ -258,7 +260,12 @@ function updateCabinetList(data) {
   data.forEach(item => {
     const div = document.createElement('div');
     div.className = 'cabinet-list-item';
-    const statusClass = item.status === 'warning' ? 'status-warning' : 'status-normal';
+    let statusClass = 'status-normal';
+    if (item.status === 'danger') {
+      statusClass = 'status-danger';
+    } else if (item.status === 'warning') {
+      statusClass = 'status-warning';
+    }
     div.innerHTML = `
       <span>${item.name}</span>
       <span class="temp ${statusClass}">${item.temperature}°C</span>
@@ -270,9 +277,42 @@ function updateCabinetList(data) {
 function updateCabinetColors(data) {
   data.forEach(item => {
     const cabinet = cabinets.find(c => c.id === item.id);
-    if (cabinet && cabinet.ledStrip) {
-      const color = item.status === 'warning' ? 0xf59e0b : 0x4ade80;
-      cabinet.ledStrip.material.color.setHex(color);
+    if (!cabinet) return;
+
+    const temp = parseFloat(item.temperature);
+
+    if (cabinet.body && cabinet.body.material) {
+      if (temp > 40) {
+        cabinet.body.material.color.setHex(0xff2222);
+        cabinet.body.material.emissive = new THREE.Color(0xff0000);
+        cabinet.body.material.emissiveIntensity = 0.3;
+      } else {
+        cabinet.body.material.color.copy(cabinet.originalBodyColor);
+        cabinet.body.material.emissive = new THREE.Color(0x000000);
+        cabinet.body.material.emissiveIntensity = 0;
+      }
+    }
+
+    if (cabinet.door && cabinet.door.material) {
+      if (temp > 40) {
+        cabinet.door.material.color.setHex(0xff3333);
+        cabinet.door.material.emissive = new THREE.Color(0xff2222);
+        cabinet.door.material.emissiveIntensity = 0.2;
+      } else {
+        cabinet.door.material.color.copy(cabinet.originalDoorColor);
+        cabinet.door.material.emissive = new THREE.Color(0x000000);
+        cabinet.door.material.emissiveIntensity = 0;
+      }
+    }
+
+    if (cabinet.ledStrip && cabinet.ledStrip.material) {
+      let ledColor = 0x4ade80;
+      if (temp > 40) {
+        ledColor = 0xff0000;
+      } else if (temp > 32) {
+        ledColor = 0xf59e0b;
+      }
+      cabinet.ledStrip.material.color.setHex(ledColor);
     }
   });
 }
@@ -350,7 +390,10 @@ function showTooltip(cabinet, event) {
 function updateTooltipContent(data) {
   tooltipTitle.textContent = data.name;
   tooltipTemp.textContent = `${data.temperature}°C`;
-  if (data.status === 'warning') {
+  if (data.status === 'danger') {
+    tooltipStatus.textContent = '温度过高！';
+    tooltipStatus.className = 'status-badge danger';
+  } else if (data.status === 'warning') {
     tooltipStatus.textContent = '温度告警';
     tooltipStatus.className = 'status-badge warning';
   } else {

@@ -12,11 +12,12 @@ const cabinetCount = 5;
 function generateTemps() {
   const temps = [];
   for (let i = 0; i < cabinetCount; i++) {
+    const temp = (20 + Math.random() * 25).toFixed(1);
     temps.push({
       id: i + 1,
       name: `机柜 ${i + 1}`,
-      temperature: (20 + Math.random() * 15).toFixed(1),
-      status: Math.random() > 0.2 ? 'normal' : 'warning'
+      temperature: temp,
+      status: temp > 40 ? 'danger' : (temp > 32 ? 'warning' : 'normal')
     });
   }
   return temps;
@@ -35,14 +36,14 @@ app.get('/api/cabinets/:id/temp', (req, res) => {
   if (id < 1 || id > cabinetCount) {
     return res.status(404).json({ success: false, message: '机柜不存在' });
   }
-  const temp = (20 + Math.random() * 15).toFixed(1);
+  const temp = (20 + Math.random() * 25).toFixed(1);
   res.json({
     success: true,
     data: {
       id,
       name: `机柜 ${id}`,
       temperature: temp,
-      status: temp > 32 ? 'warning' : 'normal'
+      status: temp > 40 ? 'danger' : (temp > 32 ? 'warning' : 'normal')
     },
     timestamp: new Date().toISOString()
   });
